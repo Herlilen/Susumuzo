@@ -61,7 +61,7 @@ namespace StarterAssets
         public float GroundedRadius = 0.28f;
 
         [Tooltip("What layers the character uses as ground")]
-        public LayerMask[] GroundLayers;
+        public LayerMask GroundLayers;
 
         [Header("Cinemachine")]
         [Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
@@ -184,12 +184,9 @@ namespace StarterAssets
             // set sphere position, with offset
             Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
                 transform.position.z);
-            foreach (LayerMask layer in GroundLayers)
-            {
-                Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, layer,
-                    QueryTriggerInteraction.Ignore);
-            }
-            
+            Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
+                QueryTriggerInteraction.Ignore);
+
             // update animator if using character
             if (_hasAnimator)
             {
