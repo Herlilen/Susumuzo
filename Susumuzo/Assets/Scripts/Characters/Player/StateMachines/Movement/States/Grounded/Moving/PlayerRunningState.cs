@@ -19,7 +19,6 @@ public class PlayerRunningState : PlayerMovementState
     #endregion
 
     #region Resuable Methods
-
     protected override void AddInputActionCallBacks()
     {
         base.AddInputActionCallBacks();
@@ -36,7 +35,14 @@ public class PlayerRunningState : PlayerMovementState
     #endregion
 
     #region Input Methods
-    private void OnMovementCanceled(InputAction.CallbackContext context)
+    protected override void OnWalkToggleStarted(InputAction.CallbackContext context)
+    {
+        base.OnWalkToggleStarted(context);
+        
+        _stateMachine.ChangeState(_stateMachine.WalkingState);
+    }
+    
+    protected void OnMovementCanceled(InputAction.CallbackContext context)
     {
         _stateMachine.ChangeState(_stateMachine.IdlingState);
     }

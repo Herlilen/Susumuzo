@@ -16,6 +16,8 @@ public class PlayerMovementState : IState
     protected Vector3 timeToReachTargetRotation;
     protected Vector3 dampedTargetRotationCurrentVelocity;
     protected Vector3 dampedTargetRotationPassedTime;
+
+    protected bool shouldWalk = false;
     
     public PlayerMovementState(PlayerMovementStateMachine playerMovementStateMachine)
     {
@@ -125,8 +127,7 @@ public class PlayerMovementState : IState
         return angle;
     }
     #endregion
-
-
+    
     #region Resuable Methods
     protected Vector3 GetMovementInputDirection()
     {
@@ -197,17 +198,20 @@ public class PlayerMovementState : IState
     
     protected virtual void AddInputActionCallBacks()
     {
+        _stateMachine.Player.Input.PlayerActions.WalkToggle.started += OnWalkToggleStarted;
     }
     
     protected virtual void RemoveInputActionCallbacks()
     {
+        _stateMachine.Player.Input.PlayerActions.WalkToggle.started -= OnWalkToggleStarted;
     }
-
     #endregion
 
     #region Input Methods
-    
-    
-
+    protected virtual void OnWalkToggleStarted(InputAction.CallbackContext context)
+    {
+        shouldWalk = !shouldWalk;
+        Debug.Log(shouldWalk);
+    }
     #endregion
 }

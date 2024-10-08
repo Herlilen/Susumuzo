@@ -33,6 +33,13 @@ public class PlayerIdlingState : PlayerMovementState
 
     private void OnMove()
     {
+        if (shouldWalk)
+        {
+            _stateMachine.ChangeState(_stateMachine.WalkingState);
+            
+            return;
+        }
+        
         _stateMachine.ChangeState(_stateMachine.RunningState);
     }
     #endregion

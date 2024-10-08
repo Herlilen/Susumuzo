@@ -484,7 +484,7 @@ GameObject:
   - component: {fileID: 272104620}
   - component: {fileID: 272104619}
   m_Layer: 0
-  m_Name: Cube (1)
+  m_Name: Slope2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4252,7 +4252,7 @@ GameObject:
   - component: {fileID: 1690345206}
   - component: {fileID: 1690345205}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Slope1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4584,7 +4584,7 @@ Transform:
   m_GameObject: {fileID: 1690345204}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 0, z: -3}
+  m_LocalPosition: {x: 4, y: 0, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
