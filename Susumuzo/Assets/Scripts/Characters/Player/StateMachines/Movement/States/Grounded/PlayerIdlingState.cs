@@ -14,32 +14,33 @@ public class PlayerIdlingState : PlayerMovementState
     {
         base.Enter();
         
-        speedModifier = 0f;
+        //speedModifier = 0f;
         
-        ResetVelocity();
+        //ResetVelocity();
     }
 
     public override void Update()
     {
         base.Update();
+        
+        speedModifier = Mathf.Lerp(speedModifier, 0f, .5f * Time.deltaTime);
 
+        //movement
         if (movementInput == Vector2.zero)
         {
             return;
         }
-
         OnMove();   //change to other state
+        
+        //attack
+        
+        //jump
+        
     }
 
     private void OnMove()
     {
-        if (shouldWalk)
-        {
-            _stateMachine.ChangeState(_stateMachine.WalkingState);
-            
-            return;
-        }
-        
+        //run when if walk is false
         _stateMachine.ChangeState(_stateMachine.RunningState);
     }
     #endregion

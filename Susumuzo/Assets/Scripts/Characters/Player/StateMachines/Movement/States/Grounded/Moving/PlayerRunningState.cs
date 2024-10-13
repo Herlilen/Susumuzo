@@ -13,9 +13,14 @@ public class PlayerRunningState : PlayerMovementState
     public override void Enter()
     {
         base.Enter();
-
-        speedModifier = 1f;
     }
+
+    public override void Update()
+    {
+        base.Update();
+        speedModifier = Mathf.Lerp(speedModifier, 1f, .5f * Time.deltaTime);
+    }
+
     #endregion
 
     #region Resuable Methods
@@ -35,16 +40,15 @@ public class PlayerRunningState : PlayerMovementState
     #endregion
 
     #region Input Methods
-    protected override void OnWalkToggleStarted(InputAction.CallbackContext context)
-    {
-        base.OnWalkToggleStarted(context);
-        
-        _stateMachine.ChangeState(_stateMachine.WalkingState);
-    }
-    
     protected void OnMovementCanceled(InputAction.CallbackContext context)
     {
         _stateMachine.ChangeState(_stateMachine.IdlingState);
+    }
+
+    protected override void OnSprintStarted(InputAction.CallbackContext context)
+    {
+        base.OnSprintEnded(context);
+        _stateMachine.ChangeState(_stateMachine.SprintingState);
     }
     #endregion
 }

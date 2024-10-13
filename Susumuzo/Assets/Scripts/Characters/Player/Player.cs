@@ -1,8 +1,10 @@
 using UnityEngine;
+using TMPro;
 
 [RequireComponent(typeof(PlayerInput))]
 public class Player : MonoBehaviour
 {
+    public TMP_Text debugger;
     public Rigidbody Rigidbody { get; private set; }
     public Transform MainCameraTransform { get; private set; }      //cinemachine controls the main camera
     public PlayerInput Input { get; private set; }

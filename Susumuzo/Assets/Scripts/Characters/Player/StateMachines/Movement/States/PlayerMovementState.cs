@@ -17,7 +17,7 @@ public class PlayerMovementState : IState
     protected Vector3 dampedTargetRotationCurrentVelocity;
     protected Vector3 dampedTargetRotationPassedTime;
 
-    protected bool shouldWalk = false;
+    protected bool shouldSprint = false;
     
     public PlayerMovementState(PlayerMovementStateMachine playerMovementStateMachine)
     {
@@ -72,7 +72,8 @@ public class PlayerMovementState : IState
         {
             return;
         }
-
+        
+        //movement
         Vector3 movementDirection = GetMovementInputDirection();
 
         float targetRotationYAngle = Rotate(movementDirection);
@@ -129,6 +130,8 @@ public class PlayerMovementState : IState
     #endregion
     
     #region Resuable Methods
+    
+    
     protected Vector3 GetMovementInputDirection()
     {
         return new Vector3(movementInput.x, 0f, movementInput.y);
@@ -198,20 +201,31 @@ public class PlayerMovementState : IState
     
     protected virtual void AddInputActionCallBacks()
     {
-        _stateMachine.Player.Input.PlayerActions.WalkToggle.started += OnWalkToggleStarted;
+        //sprint control;
+        _stateMachine.Player.Input.PlayerActions.TurboMode.started += OnSprintStarted;
+        _stateMachine.Player.Input.PlayerActions.TurboMode.canceled += OnSprintEnded;
+        
     }
     
     protected virtual void RemoveInputActionCallbacks()
     {
-        _stateMachine.Player.Input.PlayerActions.WalkToggle.started -= OnWalkToggleStarted;
+        //sprint control;
+        _stateMachine.Player.Input.PlayerActions.TurboMode.started -= OnSprintStarted;
+        _stateMachine.Player.Input.PlayerActions.TurboMode.canceled -= OnSprintEnded;
     }
     #endregion
 
     #region Input Methods
-    protected virtual void OnWalkToggleStarted(InputAction.CallbackContext context)
+    protected virtual void OnSprintStarted(InputAction.CallbackContext context)
     {
-        shouldWalk = !shouldWalk;
-        Debug.Log(shouldWalk);
+        shouldSprint = true;
+        //Debug.Log(shouldSprint);
+    }
+    
+    protected virtual void OnSprintEnded(InputAction.CallbackContext context)
+    {
+        shouldSprint = false;
+        //Debug.Log(shouldSprint);
     }
     #endregion
 }
