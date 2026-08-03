@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/AimTrainingDemo/Scenes/AimTrainingDemo.unity
+    guid: 7c3a9e2b1f4d4a6e9c8b0a1d2e3f4567
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:

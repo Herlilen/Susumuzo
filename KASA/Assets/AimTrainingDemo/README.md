@@ -1,19 +1,14 @@
 # Aim Training Demo（已隔离）
 
-本目录是**瞄准测试 Demo**的独立模块，不会自动侵入其他场景。
+瞄准测试独立模块，不侵入其他场景。
 
-## 位置
-- 运行时脚本：`Assets/AimTrainingDemo/Scripts/`（程序集 `AimTrainingDemo`，`autoReferenced: false`）
-- 编辑器工具：`Assets/AimTrainingDemo/Editor/`
-- 专用场景：`Assets/AimTrainingDemo/Scenes/AimTrainingDemo.unity`
+## 当前方案（拉枪为主）
+- 菜单：**开始拉枪调参**
+- **每完成 3 个目标**，按本批过冲/欠冲**自动调一次灵敏度**，不停测
+- HUD 显示本批进度 `0/3` 与调参结果 Toast
+- Esc 回菜单
 
-## 怎么用
-菜单 **Aim Training**：
-1. **Open Demo Scene** — 打开专用场景
-2. **Play Demo Scene** — 打开并 Play
-3. **Create / Refresh Demo Scene** — 创建/修复场景
-4. **Build Windows Folder to Desktop** — 只打包本 Demo 到桌面 `KASA_AimTrainingDemo`
+## 入口
+菜单 **Aim Training** → Open / Play Demo Scene
 
-## 说明
-- 已去掉 `RuntimeInitializeOnLoad`，在 `SampleScene` 或其他场景 Play **不会**再弹出瞄准测试
-- 主工程其他玩法请继续用自己的场景；需要测瞄准时再开本 Demo 场景
+路径：`Assets/AimTrainingDemo/`

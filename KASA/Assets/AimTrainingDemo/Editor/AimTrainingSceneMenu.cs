@@ -11,6 +11,7 @@ public static class AimTrainingSceneMenu
 {
     const string ScenePath = "Assets/AimTrainingDemo/Scenes/AimTrainingDemo.unity";
 
+    [MenuItem("Tools/Aim Training/Open Demo Scene", priority = 0)]
     [MenuItem("Aim Training/Open Demo Scene", priority = 0)]
     public static void OpenDemoScene()
     {
@@ -19,6 +20,7 @@ public static class AimTrainingSceneMenu
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
     }
 
+    [MenuItem("Tools/Aim Training/Play Demo Scene", priority = 1)]
     [MenuItem("Aim Training/Play Demo Scene", priority = 1)]
     public static void PlayDemoScene()
     {
@@ -32,6 +34,7 @@ public static class AimTrainingSceneMenu
         EditorApplication.isPlaying = true;
     }
 
+    [MenuItem("Tools/Aim Training/Create / Refresh Demo Scene", priority = 20)]
     [MenuItem("Aim Training/Create / Refresh Demo Scene", priority = 20)]
     public static void EnsureSceneExists()
     {

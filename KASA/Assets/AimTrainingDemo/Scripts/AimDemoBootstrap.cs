@@ -26,14 +26,15 @@ public class AimDemoBootstrap : MonoBehaviour
         var manager = gameObject.AddComponent<AimTrainingManager>();
         manager.player = player;
         manager.arenaRoot = root;
+        manager.flickSpawnCenter = new Vector3(0f, 1.5f, 11f);
         manager.trackCenter = new Vector3(0f, 1.5f, 11f);
-        manager.sessionSeconds = 25f;
 
         var ui = gameObject.AddComponent<AimTrainingUI>();
         ui.manager = manager;
         ui.player = player;
 
-        manager.OpenMenu();
+        // 直接开始拉枪：每 3 靶自动调参
+        manager.StartFlick();
     }
 
     void BuildEnvironment(Transform root)

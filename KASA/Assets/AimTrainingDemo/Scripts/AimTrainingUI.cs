@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 简易 OnGUI：菜单 / HUD / 结果 / 灵敏度说明设置。
+/// 菜单 / HUD / 设置。拉枪模式每 3 靶自动调参，用 Toast 提示。
 /// </summary>
 public class AimTrainingUI : MonoBehaviour
 {
@@ -64,9 +64,7 @@ public class AimTrainingUI : MonoBehaviour
                 break;
             case AimTrainingManager.UiScreen.Playing:
                 DrawHud();
-                break;
-            case AimTrainingManager.UiScreen.Results:
-                DrawResults();
+                DrawToast();
                 break;
             case AimTrainingManager.UiScreen.Settings:
                 DrawSettings();
@@ -90,91 +88,74 @@ public class AimTrainingUI : MonoBehaviour
 
     void DrawMenu()
     {
-        Rect r = CenterPanel(520, 360);
+        Rect r = CenterPanel(540, 380);
         GUI.Box(r, GUIContent.none, _box);
         GUILayout.BeginArea(new Rect(r.x + 20, r.y + 16, r.width - 40, r.height - 32));
         GUILayout.Label("射击场 · 瞄准测试 Demo", _title);
         GUILayout.Space(6);
-        GUILayout.Label("跟枪训练：按过冲·欠冲自动调参，目标约 3 轮完成适配。", _hint);
+        GUILayout.Label(
+            $"规则：每打完 {SensitivityAdvisor.TargetsPerTune} 个目标 → 按过冲/欠冲自动改灵敏度，然后继续打。",
+            _hint);
         GUILayout.Space(8);
-        GUILayout.Label($"当前适配进度：{manager.AdaptationRound}/{SensitivityAdvisor.TargetAdaptationRounds} 轮", _body);
-        GUILayout.Space(10);
+        GUILayout.Label($"已调参批数：{manager.AdaptationRound}", _body);
+        GUILayout.Space(12);
 
-        if (BigButton("开始跟枪测试（Track）", 48))
-            manager.StartTrack();
+        if (BigButton($"开始拉枪（每{SensitivityAdvisor.TargetsPerTune}靶调一次）", 52))
+            manager.StartFlick();
         GUILayout.Space(8);
-        if (BigButton("灵敏度设置（含参数说明）", 42))
+        if (BigButton("灵敏度设置", 40))
             manager.OpenSettings();
         GUILayout.Space(8);
         if (manager.AdaptationRound > 0 && BigButton("重置适配进度", 36))
             manager.ResetAdaptation();
 
         GUILayout.FlexibleSpace();
-        GUILayout.Label("Esc 可随时返回菜单 · 左键射击 · 右键开镜（降敏）", _hint);
+        GUILayout.Label("Esc 打开菜单 · 左键射击 · 右键开镜", _hint);
         GUILayout.EndArea();
     }
 
     void DrawHud()
     {
-        Rect r = new Rect(20, 20, 380, 150);
+        Rect r = new Rect(20, 20, 420, 170);
         GUI.Box(r, GUIContent.none, _box);
         GUILayout.BeginArea(new Rect(r.x + 14, r.y + 10, r.width - 28, r.height - 20));
 
-        if (manager.Track != null)
+        if (manager.Flick != null)
+        {
+            var batch = manager.Flick.BatchMetrics;
+            GUILayout.Label("拉枪 · 每3靶调参", _title);
+            GUILayout.Label(
+                $"进度 {manager.BatchProgress}/{SensitivityAdvisor.TargetsPerTune}  →  再打 {manager.TargetsUntilTune} 个就调灵敏度",
+                _body);
+            GUILayout.Label(
+                $"本批：过冲{batch.overshootEvents} 欠冲{batch.undershootEvents} 干净{batch.settleEvents}  命中{batch.hits}/{batch.shots}",
+                _body);
+            GUILayout.Label(
+                $"灵敏度 水平{player.sensitivity.horizontal:0.00} / 垂直{player.sensitivity.vertical:0.00}  · 已调{manager.AdaptationRound}批",
+                _hint);
+        }
+        else if (manager.Track != null)
         {
             var m = manager.Track.Metrics;
             GUILayout.Label($"跟枪测试  ·  剩余 {manager.Track.TimeLeft:0.0}s", _title);
             GUILayout.Label($"目标停留 {m.StayRatio:P0}", _body);
             GUILayout.Label($"过冲 {m.OvershootRate:P0}  欠冲 {m.UndershootRate:P0}", _body);
-            GUILayout.Label("保持准星贴在蓝色移动靶上", _hint);
         }
 
         GUILayout.EndArea();
     }
 
-    void DrawResults()
+    void DrawToast()
     {
-        Rect r = CenterPanel(560, 460);
+        if (string.IsNullOrEmpty(manager.LastToast) || Time.unscaledTime > manager.ToastUntil)
+            return;
+
+        float w = 520f;
+        float h = 72f;
+        Rect r = new Rect((Screen.width - w) * 0.5f, Screen.height - h - 36f, w, h);
         GUI.Box(r, GUIContent.none, _box);
-        GUILayout.BeginArea(new Rect(r.x + 20, r.y + 16, r.width - 40, r.height - 32));
-        GUILayout.Label(manager.ResultsTitle, _title);
-        GUILayout.Space(10);
-
-        if (manager.LastTrackMetrics != null)
-        {
-            var m = manager.LastTrackMetrics;
-            GUILayout.Label($"目标停留时长比例：{m.StayRatio:P1}", _body);
-            GUILayout.Label($"过冲率：{m.OvershootRate:P1}    欠冲率：{m.UndershootRate:P1}", _body);
-            GUILayout.Label($"平均滞后：{m.MeanLagDegrees:+0.00;-0.00}°（+欠冲 / -过冲）", _hint);
-        }
-
-        GUILayout.Space(14);
-        var s = manager.LastSuggestion;
-        GUILayout.Label("参数建议", _title);
-        GUILayout.Label($"适配轮次 {manager.AdaptationRound}/{SensitivityAdvisor.TargetAdaptationRounds}", _hint);
-        GUILayout.Label(s.summary, _body);
-        GUILayout.Label(s.detail, _hint);
-        GUILayout.Space(16);
-
-        bool canTune =
-            !Mathf.Approximately(s.horizontalMul, 1f) ||
-            !Mathf.Approximately(s.verticalMul, 1f) ||
-            !Mathf.Approximately(s.adsMul, 1f) ||
-            !Mathf.Approximately(s.accelDelta, 0f);
-
-        if (canTune && BigButton("一键自动调参", 44))
-            manager.ApplyAutoTune();
-        else if (!canTune)
-            GUILayout.Label("本轮无需调参。", _hint);
-
-        GUILayout.Space(6);
-        GUILayout.Label(
-            $"调参后 → 水平 {player.sensitivity.horizontal:0.00} / 垂直 {player.sensitivity.vertical:0.00} / 开镜×{player.sensitivity.adsMultiplier:0.00} / 加速 {player.sensitivity.acceleration:0.00}",
-            _hint);
-        GUILayout.Space(10);
-        if (BigButton("返回菜单", 40))
-            manager.OpenMenu();
-
+        GUILayout.BeginArea(new Rect(r.x + 14, r.y + 12, r.width - 28, r.height - 20));
+        GUILayout.Label(manager.LastToast, _body);
         GUILayout.EndArea();
     }
 
@@ -185,7 +166,7 @@ public class AimTrainingUI : MonoBehaviour
         GUILayout.BeginArea(new Rect(r.x + 20, r.y + 16, r.width - 40, r.height - 32));
         GUILayout.Label("灵敏度设置", _title);
         GUILayout.Space(4);
-        GUILayout.Label("每个参数都附带直观说明，方便理解调参含义。", _hint);
+        GUILayout.Label("每个参数都附带直观说明。", _hint);
         GUILayout.Space(12);
 
         var sens = player.sensitivity;

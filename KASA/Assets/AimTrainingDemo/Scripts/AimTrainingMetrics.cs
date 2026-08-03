@@ -2,6 +2,76 @@ using System;
 using UnityEngine;
 
 [Serializable]
+public class FlickMetrics
+{
+    public int shots;
+    public int hits;
+    public int targetsPresented;
+    public int firstShotHits;
+    public int overshootEvents;
+    public int undershootEvents;
+    public int settleEvents;
+
+    public float TotalAccuracy => shots <= 0 ? 0f : (float)hits / shots;
+    public float FirstShotAccuracy => targetsPresented <= 0 ? 0f : (float)firstShotHits / targetsPresented;
+
+    public int LeadLagCount => overshootEvents + undershootEvents + settleEvents;
+
+    public float OvershootRate
+    {
+        get
+        {
+            int n = LeadLagCount;
+            return n <= 0 ? 0f : (float)overshootEvents / n;
+        }
+    }
+
+    public float UndershootRate
+    {
+        get
+        {
+            int n = LeadLagCount;
+            return n <= 0 ? 0f : (float)undershootEvents / n;
+        }
+    }
+
+    public float NetBias
+    {
+        get
+        {
+            int n = LeadLagCount;
+            if (n <= 0) return 0f;
+            return (undershootEvents - overshootEvents) / (float)n;
+        }
+    }
+
+    public void Reset()
+    {
+        shots = 0;
+        hits = 0;
+        targetsPresented = 0;
+        firstShotHits = 0;
+        overshootEvents = 0;
+        undershootEvents = 0;
+        settleEvents = 0;
+    }
+
+    public FlickMetrics Clone()
+    {
+        return new FlickMetrics
+        {
+            shots = shots,
+            hits = hits,
+            targetsPresented = targetsPresented,
+            firstShotHits = firstShotHits,
+            overshootEvents = overshootEvents,
+            undershootEvents = undershootEvents,
+            settleEvents = settleEvents
+        };
+    }
+}
+
+[Serializable]
 public class TrackMetrics
 {
     public float totalSeconds;
@@ -26,13 +96,15 @@ public class TrackMetrics
 }
 
 /// <summary>
-/// 按过冲/欠冲数据调参。单步幅度按「约 3 轮完成适配」设计。
+/// 按过冲/欠冲调参。拉枪默认每 3 靶一批自动调一次。
 /// </summary>
 public static class SensitivityAdvisor
 {
     public const int TargetAdaptationRounds = 3;
+    public const int TargetsPerTune = 3;
 
     const float RateGapTrigger = 0.08f;
+    const float FlickBiasDeadzone = 0.22f;
     const float TrackLagDeadzoneDeg = 0.35f;
 
     public static void EvaluateLeadLag(
@@ -55,10 +127,7 @@ public static class SensitivityAdvisor
         if (Mathf.Abs(netSignal) >= netDeadzone)
             netIntensity = Mathf.Clamp01(Mathf.InverseLerp(netDeadzone, netDeadzone * 4f, Mathf.Abs(netSignal)));
 
-        float primary = gapIntensity;
-        float secondary = netIntensity;
-
-        if (primary < 0.01f && secondary < 0.01f)
+        if (gapIntensity < 0.01f && netIntensity < 0.01f)
             return;
 
         if (Mathf.Abs(gap) >= RateGapTrigger)
@@ -69,14 +138,13 @@ public static class SensitivityAdvisor
             return;
 
         float alignedBoost = 1f;
-        if (secondary > 0.01f)
+        if (netIntensity > 0.01f)
         {
             int netDir = netSignal > 0f ? 1 : -1;
-            alignedBoost = netDir == direction ? 1f + 0.35f * secondary : Mathf.Lerp(1f, 0.45f, secondary);
+            alignedBoost = netDir == direction ? 1f + 0.35f * netIntensity : Mathf.Lerp(1f, 0.45f, netIntensity);
         }
 
-        intensity = Mathf.Clamp01(Mathf.Max(primary, secondary * 0.85f) * alignedBoost);
-
+        intensity = Mathf.Clamp01(Mathf.Max(gapIntensity, netIntensity * 0.85f) * alignedBoost);
         float dominant = direction > 0 ? under : over;
         intensity = Mathf.Clamp01(intensity * Mathf.Lerp(0.75f, 1.15f, Mathf.InverseLerp(0.2f, 0.55f, dominant)));
     }
@@ -100,8 +168,7 @@ public static class SensitivityAdvisor
             return default;
 
         float step = StepForIntensity(intensity, adaptationRound);
-        int roundDisplay = Mathf.Clamp(adaptationRound + 1, 1, TargetAdaptationRounds);
-        int left = Mathf.Max(0, TargetAdaptationRounds - roundDisplay);
+        int roundDisplay = adaptationRound + 1;
 
         if (direction > 0)
         {
@@ -111,9 +178,8 @@ public static class SensitivityAdvisor
                 verticalMul = 1f + step * 0.9f,
                 adsMul = 1f + step * 0.45f,
                 accelDelta = Mathf.Lerp(0.02f, 0.05f, intensity),
-                summary = $"建议提高灵敏度（{contextPrefix}欠冲）· 第{roundDisplay}/{TargetAdaptationRounds}轮",
-                detail = $"过冲 {over:P0} / 欠冲 {under:P0} → 水平 +{step:P0}。按约三轮适配设计" +
-                         (left > 0 ? $"，建议再测 {left} 轮。" : "，本轮后应接近完成。")
+                summary = $"提高灵敏度（{contextPrefix}欠冲）· 第{roundDisplay}批",
+                detail = $"近{TargetsPerTune}靶：过冲 {over:P0} / 欠冲 {under:P0} → 水平 +{step:P0}"
             };
         }
 
@@ -123,43 +189,58 @@ public static class SensitivityAdvisor
             verticalMul = 1f - step * 0.9f,
             adsMul = 1f - step * 0.45f,
             accelDelta = Mathf.Lerp(-0.02f, -0.05f, intensity),
-            summary = $"建议降低灵敏度（{contextPrefix}过冲）· 第{roundDisplay}/{TargetAdaptationRounds}轮",
-            detail = $"过冲 {over:P0} / 欠冲 {under:P0} → 水平 -{step:P0}。按约三轮适配设计" +
-                     (left > 0 ? $"，建议再测 {left} 轮。" : "，本轮后应接近完成。")
+            summary = $"降低灵敏度（{contextPrefix}过冲）· 第{roundDisplay}批",
+            detail = $"近{TargetsPerTune}靶：过冲 {over:P0} / 欠冲 {under:P0} → 水平 -{step:P0}"
         };
+    }
+
+    /// <summary>
+    /// 每满 TargetsPerTune 个目标调用一次。
+    /// 3 靶小样本要求至少 2 票同向才调，避免 2 欠 1 过就一路加灵敏度。
+    /// </summary>
+    public static SensitivitySuggestion FromFlickBatch(FlickMetrics m, int adaptationRound = 0)
+    {
+        int overN = m.overshootEvents;
+        int underN = m.undershootEvents;
+        int settleN = m.settleEvents;
+        int n = Mathf.Max(1, overN + underN + settleN);
+        float over = overN / (float)n;
+        float under = underN / (float)n;
+
+        // 至少 2/3 同向才动灵敏度
+        if (underN >= 2 && underN > overN)
+        {
+            float intensity = Mathf.Clamp01(0.35f + 0.25f * (underN - overN));
+            return Build(1, intensity, over, under, "拉枪", adaptationRound);
+        }
+
+        if (overN >= 2 && overN > underN)
+        {
+            float intensity = Mathf.Clamp01(0.35f + 0.25f * (overN - underN));
+            return Build(-1, intensity, over, under, "拉枪", adaptationRound);
+        }
+
+        return SensitivitySuggestion.Identity(
+            $"满{TargetsPerTune}靶：信号不强，本批不改",
+            $"过冲{overN} / 欠冲{underN} / 干净{settleN}（需≥2票同向才调参）。");
     }
 
     public static SensitivitySuggestion FromTrack(TrackMetrics m, int adaptationRound = 0)
     {
         if (m.totalSeconds < 5f || m.lagSamples < 30)
-            return SensitivitySuggestion.Identity("样本不足", "再多跟几秒移动靶，数据会更可靠。");
+            return SensitivitySuggestion.Identity("样本不足", "再多跟几秒移动靶。");
 
         float over = m.OvershootRate;
         float under = m.UndershootRate;
         float meanLag = m.MeanLagDegrees;
-        float stay = m.StayRatio;
 
         EvaluateLeadLag(over, under, meanLag, TrackLagDeadzoneDeg, out int dir, out float intensity);
         var sug = Build(dir, intensity, over, under, "跟枪", adaptationRound);
         if (!string.IsNullOrEmpty(sug.summary))
             return sug;
 
-        if (stay < 0.3f && adaptationRound < TargetAdaptationRounds)
-        {
-            float step = StepForIntensity(0.35f, adaptationRound);
-            return new SensitivitySuggestion
-            {
-                horizontalMul = 1f + step,
-                verticalMul = 1f + step * 0.9f,
-                adsMul = 1f + step * 0.4f,
-                accelDelta = 0.02f,
-                summary = $"建议提高灵敏度（贴靶偏少）· 第{adaptationRound + 1}/{TargetAdaptationRounds}轮",
-                detail = $"停留 {stay:P0}，过冲 {over:P0} / 欠冲 {under:P0}。过冲欠冲接近，但跟不上目标，按欠冲方向上调。"
-            };
-        }
-
         return SensitivitySuggestion.Identity(
-            adaptationRound >= TargetAdaptationRounds - 1 ? "适配完成" : "当前参数较均衡",
-            $"过冲 {over:P0} / 欠冲 {under:P0}，平均滞后 {meanLag:+0.00;-0.00}°，停留 {stay:P0}。无需再调。");
+            "当前参数较均衡",
+            $"过冲 {over:P0} / 欠冲 {under:P0}，平均滞后 {meanLag:+0.00;-0.00}°。");
     }
 }
