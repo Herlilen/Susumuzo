@@ -1,5 +1,11 @@
-# FILL IN INFO ABOUT YOUR GAME HERE. 
+# KASA
 
-DO NOT LEAVE IT LIKE THIS!!!
+Third-person action POC. Weapon fantasy: multi-mode **umbrella** — switch modes mid-fight to build combos.
 
-Please? Please, give me content. I'm begging you. It's not that hard. Thanks.
+## Docs
+
+- **[POC_CHECKLIST.md](./POC_CHECKLIST.md)** — manifesto + solo development checklist (check this off as you go)
+
+## Project
+
+Unity project lives in `KASA/` (Unity 6000.3).
