@@ -1,5 +1,7 @@
-# FILL IN INFO ABOUT YOUR GAME HERE. 
+# KASA / Susumuzo
 
-DO NOT LEAVE IT LIKE THIS!!!
+Unity third-person action POC (umbrella combat). Project lives in `KASA/`.
 
-Please? Please, give me content. I'm begging you. It's not that hard. Thanks.
+## Blender MCP
+
+Cursor 已配置 Blender MCP：见 **[BLENDER_MCP.md](./BLENDER_MCP.md)** 与 `.cursor/mcp.json`。
