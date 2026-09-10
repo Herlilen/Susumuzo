@@ -22,7 +22,7 @@ namespace Kasa.PostProcessingDemo.Editor
             EnsureFolder(Root + "/RenderTextures");
 
             RenderTexture normalRt = CreateRenderTexture("NormalView", 640, 360, FilterMode.Bilinear);
-            RenderTexture asciiRt = CreateRenderTexture("AsciiSource", 960, 540, FilterMode.Point);
+            RenderTexture asciiRt = CreateRenderTexture("AsciiSource", 1920, 1080, FilterMode.Point);
             RenderTexture crtRt = CreateRenderTexture("CrtLowResolution", 320, 180, FilterMode.Point);
             Material asciiMaterial = CreateMaterial("AsciiPost", "KASA/PostProcessing/ASCII");
             Material crtMaterial = CreateMaterial("CrtRetroPost", "KASA/PostProcessing/CRT Retro");

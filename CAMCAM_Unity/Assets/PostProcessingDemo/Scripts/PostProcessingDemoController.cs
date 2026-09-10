@@ -74,7 +74,7 @@ namespace Kasa.PostProcessingDemo
                 case 1:
                     output.texture = asciiSource;
                     output.material = asciiMaterial;
-                    SetLabels("02  ASCII", "Letter glyphs + quantized color blocks · 960×540 source");
+                    SetLabels("02  ASCII", "Letter glyphs + quantized color blocks · 1920×1080 source");
                     break;
                 default:
                     output.texture = crtSource;
